@@ -9,6 +9,47 @@ const Dashboard = () => {
   const { profile, loading } = useProfile();
   useDeviceKeys();
 
+  // 🔐 Generate pairing code (Simulated NFC)
+  function generateSessionCode() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  // 👤 Web Biometric Authentication
+  async function authenticateUser() {
+    if (!window.PublicKeyCredential) {
+      alert("Biometric not supported on this device.");
+      return false;
+    }
+
+    try {
+      await navigator.credentials.get({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          timeout: 60000,
+          userVerification: "required",
+        },
+      } as any);
+
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // 🚀 Send Handler
+  const handleSend = async () => {
+    const sessionCode = generateSessionCode();
+    alert("Share this code with receiver: " + sessionCode);
+
+    const isAuthenticated = await authenticateUser();
+
+    if (isAuthenticated) {
+      alert("Transaction Successful!");
+    } else {
+      alert("Authentication Failed");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -58,14 +99,19 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-3 mb-8 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-          <button className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors">
+          <button
+            onClick={handleSend}
+            className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors"
+          >
             <ArrowUpRight className="h-5 w-5" />
             <span className="text-xs font-medium">Send</span>
           </button>
+
           <button className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors">
             <ArrowDownLeft className="h-5 w-5" />
             <span className="text-xs font-medium">Receive</span>
           </button>
+
           <button className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors">
             <Clock className="h-5 w-5" />
             <span className="text-xs font-medium">History</span>
