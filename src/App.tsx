@@ -14,33 +14,24 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
         <Sonner />
-
         <BrowserRouter>
           <Routes>
-            {/* Main Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/history" element={<History />} />
-
-            {/* Payment Flow */}
             <Route path="/send" element={<SendMoney />} />
             <Route path="/proximity" element={<Proximity />} />
             <Route path="/success" element={<Success />} />
-
-            {/* Fallback */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-
       </TooltipProvider>
     </QueryClientProvider>
   );
-};
-
-export default App;
+}
