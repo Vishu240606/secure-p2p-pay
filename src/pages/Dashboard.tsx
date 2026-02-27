@@ -40,10 +40,30 @@ const Dashboard = () => {
       } as any);
 
       return true;
-    } catch (err) {
-      alert("Biometric blocked in preview. Simulating success.");
-      return true;
+    }// 👤 Biometric (Proper gated version)
+async function authenticateUser() {
+  try {
+    if (!window.PublicKeyCredential) {
+      const confirmDemo = confirm(
+        "Biometric not supported in preview.\nSimulate successful authentication?"
+      );
+      return confirmDemo; // ✅ user must approve
     }
+
+    await navigator.credentials.get({
+      publicKey: {
+        challenge: new Uint8Array(32),
+        timeout: 60000,
+        userVerification: "required",
+      },
+    } as any);
+
+    return true; // ✅ real success
+
+  } catch (err) {
+    return false; // ❗ DO NOT auto-return true anymore
+  }
+}
   }
 
   // 🚀 Send Logic
