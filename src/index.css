@@ -1,110 +1,31 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Temporary basic styling (Tailwind removed for deployment fix) */
 
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-@layer base {
-  :root {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 95%;
-
-    --card: 220 18% 10%;
-    --card-foreground: 210 20% 95%;
-
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 95%;
-
-    --primary: 145 72% 46%;
-    --primary-foreground: 220 20% 7%;
-
-    --secondary: 220 16% 16%;
-    --secondary-foreground: 210 20% 90%;
-
-    --muted: 220 14% 14%;
-    --muted-foreground: 215 14% 50%;
-
-    --accent: 145 60% 40%;
-    --accent-foreground: 220 20% 7%;
-
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 210 20% 95%;
-
-    --border: 220 14% 18%;
-    --input: 220 14% 18%;
-    --ring: 145 72% 46%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 145 72% 46%;
-    --sidebar-primary-foreground: 220 20% 7%;
-    --sidebar-accent: 220 14% 14%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 14% 18%;
-    --sidebar-ring: 145 72% 46%;
-
-    /* Custom tokens */
-    --gradient-primary: linear-gradient(135deg, hsl(145, 72%, 46%), hsl(160, 60%, 40%));
-    --gradient-card: linear-gradient(145deg, hsl(220, 18%, 12%), hsl(220, 18%, 8%));
-    --shadow-glow: 0 0 20px hsl(145 72% 46% / 0.15);
-    --shadow-card: 0 4px 24px hsl(220 20% 4% / 0.5);
-
-    --font-display: 'Space Grotesk', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-
-  .dark {
-    --background: 220 20% 7%;
-    --foreground: 210 20% 95%;
-  }
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: #0f1115;
+  color: #ffffff;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-display);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: hsl(var(--background));
-  }
-  ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 2px;
-  }
+/* Basic smooth font rendering */
+* {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@layer utilities {
-  .text-gradient {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+/* Optional simple scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
 
-  .glass-card {
-    background: var(--gradient-card);
-    border: 1px solid hsl(var(--border));
-    box-shadow: var(--shadow-card);
-  }
+::-webkit-scrollbar-track {
+  background: #0f1115;
+}
 
-  .glow {
-    box-shadow: var(--shadow-glow);
-  }
-
-  .font-mono {
-    font-family: var(--font-mono);
-  }
+::-webkit-scrollbar-thumb {
+  background: #2a2f36;
+  border-radius: 4px;
 }
