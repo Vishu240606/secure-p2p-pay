@@ -23,12 +23,15 @@ const Dashboard = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
 
-  // 👤 Biometric (WebAuthn with demo fallback)
+  // 👤 Fixed Biometric Authentication (Proper Gating)
   async function authenticateUser() {
     try {
+      // If WebAuthn not supported (preview mode)
       if (!window.PublicKeyCredential) {
-        alert("Biometric not supported. Simulating for demo.");
-        return true;
+        const confirmDemo = confirm(
+          "Biometric not supported in preview.\nSimulate successful authentication?"
+        );
+        return confirmDemo; // ✅ Only proceed if user approves
       }
 
       await navigator.credentials.get({
@@ -39,31 +42,11 @@ const Dashboard = () => {
         },
       } as any);
 
-      return true;
-    }// 👤 Biometric (Proper gated version)
-async function authenticateUser() {
-  try {
-    if (!window.PublicKeyCredential) {
-      const confirmDemo = confirm(
-        "Biometric not supported in preview.\nSimulate successful authentication?"
-      );
-      return confirmDemo; // ✅ user must approve
+      return true; // ✅ Real success
+
+    } catch (err) {
+      return false; // ❗ Never auto-return true anymore
     }
-
-    await navigator.credentials.get({
-      publicKey: {
-        challenge: new Uint8Array(32),
-        timeout: 60000,
-        userVerification: "required",
-      },
-    } as any);
-
-    return true; // ✅ real success
-
-  } catch (err) {
-    return false; // ❗ DO NOT auto-return true anymore
-  }
-}
   }
 
   // 🚀 Send Logic
@@ -91,13 +74,12 @@ async function authenticateUser() {
 
     if (!isAuthenticated) {
       alert("Authentication Failed");
-      return;
+      return; // ✅ Stops execution here
     }
 
-    // Deduct balance
+    // ✅ Only runs if authentication succeeded
     setLocalBalance(prev => prev - amount);
 
-    // Add transaction entry
     const newTransaction = {
       id: Date.now(),
       type: "Sent",
