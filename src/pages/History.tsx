@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
-interface Transaction {
-  id: string;
-  amount: number;
-  token_id: string;
-  status: string;
-  created_at: string;
-}
-
 export default function History() {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,24 +50,20 @@ export default function History() {
         Transaction History
       </h1>
 
-      {/* Loading */}
       {loading && (
         <div className="text-gray-400">Loading transactions...</div>
       )}
 
-      {/* Error */}
       {error && (
         <div className="text-red-400 mb-4">{error}</div>
       )}
 
-      {/* Empty State */}
       {!loading && transactions.length === 0 && !error && (
         <div className="text-gray-400">
           No transactions yet.
         </div>
       )}
 
-      {/* Transactions */}
       {transactions.map((tx) => (
         <div key={tx.id} className="bg-gray-800 p-4 rounded-xl mb-4">
           <div className="flex justify-between">
