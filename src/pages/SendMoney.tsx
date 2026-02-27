@@ -1,78 +1,71 @@
-const handlePayment = async () => {
-  try {
+import { useState } from "react";
+import { supabase } from "../lib/supabase";
+import { useNavigate } from "react-router-dom";
+
+export default function SendMoney() {
+  const [amount, setAmount] = useState("");
+  const navigate = useNavigate();
+
+  const handlePayment = async () => {
     const numericAmount = Number(amount);
+    if (!numericAmount) return;
 
-    if (!numericAmount || numericAmount <= 0) {
-      alert("Enter a valid amount");
-      return;
-    }
-
-    // Get logged in user
     const {
       data: { user },
-      error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
-      alert("User not authenticated");
-      return;
-    }
+    if (!user) return;
 
-    const userId = user.id;
-
-    // 1️⃣ Get current balance
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile } = await supabase
       .from("profiles")
       .select("balance")
-      .eq("id", userId)
+      .eq("id", user.id)
       .single();
 
-    if (profileError || !profile) {
-      alert("Could not fetch balance");
-      return;
-    }
+    if (!profile) return;
 
     if (profile.balance < numericAmount) {
       alert("Insufficient balance");
       return;
     }
 
-    // 2️⃣ Deduct balance safely
     const newBalance = profile.balance - numericAmount;
 
-    const { error: updateError } = await supabase
+    await supabase
       .from("profiles")
       .update({ balance: newBalance })
-      .eq("id", userId);
+      .eq("id", user.id);
 
-    if (updateError) {
-      alert("Failed to update balance");
-      return;
-    }
-
-    // 3️⃣ Generate secure token
     const tokenId = crypto.randomUUID();
 
-    // 4️⃣ Insert transaction
-    const { error: txError } = await supabase
-      .from("transactions")
-      .insert({
-        sender_id: userId,
-        amount: numericAmount,
-        token_id: tokenId,
-        status: "completed",
-      });
+    await supabase.from("transactions").insert({
+      sender_id: user.id,
+      amount: numericAmount,
+      token_id: tokenId,
+      status: "completed",
+    });
 
-    if (txError) {
-      alert("Transaction failed");
-      return;
-    }
-
-    // 5️⃣ Navigate to success page
     navigate("/success", { state: { amount: numericAmount } });
+  };
 
-  } catch (err) {
-    console.error("Payment error:", err);
-    alert("Something went wrong");
-  }
-};
+  return (
+    <div className="p-6 text-white">
+      <h1 className="text-xl mb-4">Send Money</h1>
+
+      <input
+        type="number"
+        placeholder="Enter amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="p-2 text-black"
+      />
+
+      <button
+        onClick={handlePayment}
+        className="ml-4 bg-green-500 px-4 py-2"
+      >
+        Send
+      </button>
+    </div>
+  );
+}
