@@ -1,31 +1,6 @@
-/* Temporary basic styling (Tailwind removed for deployment fix) */
-
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background-color: #0f1115;
-  color: #ffffff;
-}
-
-/* Basic smooth font rendering */
-* {
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Optional simple scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
   background: #0f1115;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #2a2f36;
-  border-radius: 4px;
+  color: white;
 }
