@@ -1,11 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
+import { useDeviceKeys } from "@/hooks/useDeviceKeys";
 import { Shield, LogOut, ArrowUpRight, ArrowDownLeft, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const { signOut } = useAuth();
   const { profile, loading } = useProfile();
+  useDeviceKeys();
 
   if (loading) {
     return (
