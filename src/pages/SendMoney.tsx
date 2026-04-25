@@ -73,7 +73,7 @@ export default function SendMoney() {
       }
 
       const result = await validatePaymentToken(token, senderProfile.public_key);
-      if (!result.valid) {
+      if (result.valid === false) {
         toast.error(result.reason);
         setToken(null);
         return;
