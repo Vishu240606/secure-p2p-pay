@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          public_id: string
           public_key: string | null
           updated_at: string
           user_id: string
@@ -29,6 +30,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          public_id: string
           public_key?: string | null
           updated_at?: string
           user_id: string
@@ -38,9 +40,46 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          public_id?: string
           public_key?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          receiver_id: string
+          receiver_public_id: string
+          sender_id: string
+          sender_public_id: string
+          status: string
+          token_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          receiver_id: string
+          receiver_public_id: string
+          sender_id: string
+          sender_public_id: string
+          status?: string
+          token_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          receiver_public_id?: string
+          sender_id?: string
+          sender_public_id?: string
+          status?: string
+          token_id?: string
         }
         Relationships: []
       }
@@ -49,7 +88,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_public_id: { Args: never; Returns: string }
+      transfer_funds: {
+        Args: {
+          p_amount: number
+          p_receiver_public_id: string
+          p_token_id: string
+        }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          receiver_id: string
+          receiver_public_id: string
+          sender_id: string
+          sender_public_id: string
+          status: string
+          token_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "transactions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
