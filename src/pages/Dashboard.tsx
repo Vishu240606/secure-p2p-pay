@@ -1,96 +1,15 @@
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { useDeviceKeys } from "@/hooks/useDeviceKeys";
-import { Shield, LogOut, ArrowUpRight, ArrowDownLeft, Clock } from "lucide-react";
+import { Shield, LogOut, ArrowUpRight, ArrowDownLeft, Clock, Copy } from "lucide-react";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { signOut } = useAuth();
   const { profile, loading } = useProfile();
   useDeviceKeys();
-
-  const initialBalance = profile?.balance ?? 0;
-
-  const [localBalance, setLocalBalance] = useState<number>(0);
-  const [transactions, setTransactions] = useState<any[]>([]);
-
-  useEffect(() => {
-    setLocalBalance(initialBalance);
-  }, [initialBalance]);
-
-  // 🔐 Generate pairing code
-  function generateSessionCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  }
-
-  // 👤 Fixed Biometric Authentication (Proper Gating)
-  async function authenticateUser() {
-    try {
-      // If WebAuthn not supported (preview mode)
-      if (!window.PublicKeyCredential) {
-        const confirmDemo = confirm(
-          "Biometric not supported in preview.\nSimulate successful authentication?"
-        );
-        return confirmDemo; // ✅ Only proceed if user approves
-      }
-
-      await navigator.credentials.get({
-        publicKey: {
-          challenge: new Uint8Array(32),
-          timeout: 60000,
-          userVerification: "required",
-        },
-      } as any);
-
-      return true; // ✅ Real success
-
-    } catch (err) {
-      return false; // ❗ Never auto-return true anymore
-    }
-  }
-
-  // 🚀 Send Logic
-  const handleSend = async () => {
-    const amountInput = prompt("Enter amount to send:");
-
-    if (!amountInput) return;
-
-    const amount = parseFloat(amountInput);
-
-    if (isNaN(amount) || amount <= 0) {
-      alert("Invalid amount");
-      return;
-    }
-
-    if (amount > localBalance) {
-      alert("Insufficient balance");
-      return;
-    }
-
-    const sessionCode = generateSessionCode();
-    alert("Share this code with receiver: " + sessionCode);
-
-    const isAuthenticated = await authenticateUser();
-
-    if (!isAuthenticated) {
-      alert("Authentication Failed");
-      return; // ✅ Stops execution here
-    }
-
-    // ✅ Only runs if authentication succeeded
-    setLocalBalance(prev => prev - amount);
-
-    const newTransaction = {
-      id: Date.now(),
-      type: "Sent",
-      amount,
-      date: new Date().toLocaleString(),
-    };
-
-    setTransactions(prev => [newTransaction, ...prev]);
-
-    alert("Transaction Successful!");
-  };
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -101,6 +20,18 @@ const Dashboard = () => {
   }
 
   const displayName = profile?.display_name ?? "User";
+  const balance = profile?.balance ?? 0;
+  const publicId = profile?.public_id ?? "—";
+
+  const copyId = async () => {
+    if (!profile?.public_id) return;
+    try {
+      await navigator.clipboard.writeText(profile.public_id);
+      toast.success("ID copied");
+    } catch {
+      toast.error("Could not copy");
+    }
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 pb-8 pt-6">
@@ -119,16 +50,17 @@ const Dashboard = () => {
           <button
             onClick={signOut}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Sign out"
           >
             <LogOut className="h-4 w-4" />
           </button>
         </div>
 
         {/* Balance Card */}
-        <div className="glass-card rounded-2xl p-6 mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+        <div className="glass-card rounded-2xl p-6 mb-4 animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <p className="text-sm text-muted-foreground mb-1">Total Balance</p>
           <p className="text-4xl font-bold tracking-tight text-foreground font-mono">
-            ${localBalance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+            ${balance.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           </p>
           <div className="mt-4 flex items-center gap-2">
             <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
@@ -138,47 +70,48 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Public ID Card */}
+        <button
+          onClick={copyId}
+          className="glass-card w-full rounded-2xl p-4 mb-6 flex items-center justify-between text-left animate-slide-up hover:bg-secondary/40 transition-colors"
+          style={{ animationDelay: "0.15s" }}
+        >
+          <div className="min-w-0">
+            <p className="text-xs text-muted-foreground">Your ProxiPay ID</p>
+            <p className="font-mono text-sm text-foreground truncate">{publicId}</p>
+          </div>
+          <Copy className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-3" />
+        </button>
+
         {/* Quick Actions */}
         <div className="grid grid-cols-3 gap-3 mb-8 animate-slide-up" style={{ animationDelay: "0.2s" }}>
           <button
-            onClick={handleSend}
+            onClick={() => navigate("/send")}
             className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors"
           >
             <ArrowUpRight className="h-5 w-5" />
             <span className="text-xs font-medium">Send</span>
           </button>
-
-          <button className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors">
+          <button
+            onClick={() => navigate("/receive")}
+            className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors"
+          >
             <ArrowDownLeft className="h-5 w-5" />
             <span className="text-xs font-medium">Receive</span>
           </button>
-
-          <button className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors">
+          <button
+            onClick={() => navigate("/history")}
+            className="glass-card flex flex-col items-center gap-2 rounded-xl p-4 text-muted-foreground hover:text-primary transition-colors"
+          >
             <Clock className="h-5 w-5" />
             <span className="text-xs font-medium">History</span>
           </button>
         </div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity hint */}
         <div className="animate-slide-up" style={{ animationDelay: "0.3s" }}>
-          <h2 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Recent Activity
-          </h2>
-          <div className="glass-card rounded-xl p-6 text-sm">
-            {transactions.length === 0 ? (
-              <p className="text-muted-foreground text-center">No transactions yet</p>
-            ) : (
-              <div className="space-y-3">
-                {transactions.map(tx => (
-                  <div key={tx.id} className="flex justify-between">
-                    <span>{tx.type}</span>
-                    <span className="text-red-400">
-                      - ${tx.amount.toFixed(2)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+          <div className="glass-card rounded-xl p-6 text-sm text-center text-muted-foreground">
+            Tap History to see your transactions
           </div>
         </div>
       </div>

@@ -1,97 +1,116 @@
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Tx {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  sender_public_id: string;
+  receiver_public_id: string;
+  amount: number;
+  token_id: string;
+  status: string;
+  created_at: string;
+}
 
 export default function History() {
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<Tx[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false })
+        .limit(100);
 
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-          setError("User not authenticated");
-          return;
-        }
-
-        const { data, error: txError } = await supabase
-          .from("transactions")
-          .select("*")
-          .eq("sender_id", user.id)
-          .order("created_at", { ascending: false });
-
-        if (txError) {
-          setError("Failed to fetch transactions");
-          return;
-        }
-
-        setTransactions(data || []);
-      } catch (err) {
-        console.error(err);
-        setError("Something went wrong");
-      } finally {
-        setLoading(false);
+      if (cancelled) return;
+      if (error) {
+        setError("Could not load transactions.");
+      } else {
+        setTransactions((data as Tx[]) ?? []);
+        setError(null);
       }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
     };
-
-    fetchTransactions();
-  }, []);
+  }, [user]);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
-      <h1 className="text-2xl font-semibold mb-6">
-        Transaction History
-      </h1>
-
-      {loading && (
-        <div className="text-gray-400">Loading transactions...</div>
-      )}
-
-      {error && (
-        <div className="text-red-400 mb-4">{error}</div>
-      )}
-
-      {!loading && transactions.length === 0 && !error && (
-        <div className="text-gray-400">
-          No transactions yet.
-        </div>
-      )}
-
-      {transactions.map((tx) => (
-        <div key={tx.id} className="bg-gray-800 p-4 rounded-xl mb-4">
-          <div className="flex justify-between">
-            <span>₹ {tx.amount}</span>
-            <span className="text-sm text-gray-400">
-              {tx.created_at
-                ? new Date(tx.created_at).toLocaleString()
-                : "—"}
-            </span>
-          </div>
-
-          <div className="text-xs text-gray-500 mt-2">
-            Token: {tx.token_id
-              ? tx.token_id.substring(0, 8) + "..."
-              : "N/A"}
-          </div>
-
-          <div
-            className={`text-sm mt-1 ${
-              tx.status === "completed"
-                ? "text-emerald-400"
-                : "text-yellow-400"
-            }`}
+    <div className="flex min-h-screen flex-col bg-background px-4 pb-8 pt-6">
+      <div className="mx-auto w-full max-w-sm">
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={() => navigate("/")}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Back"
           >
-            {tx.status}
-          </div>
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <p className="font-semibold text-foreground">History</p>
+          <div className="h-10 w-10" />
         </div>
-      ))}
+
+        {loading && (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="glass-card rounded-xl p-6 text-sm text-center text-destructive">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && transactions.length === 0 && (
+          <div className="glass-card rounded-xl p-6 text-sm text-center text-muted-foreground">
+            No transactions yet
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {transactions.map((tx) => {
+            const sent = tx.sender_id === user?.id;
+            const counterparty = sent ? tx.receiver_public_id : tx.sender_public_id;
+            return (
+              <div key={tx.id} className="glass-card rounded-xl p-4 flex items-center gap-3">
+                <div className={`flex h-10 w-10 items-center justify-center rounded-full ${sent ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                  {sent ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground">
+                    {sent ? "Sent to" : "Received from"}{" "}
+                    <span className="font-mono">{counterparty}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(tx.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <p className={`font-mono font-semibold ${sent ? "text-destructive" : "text-primary"}`}>
+                  {sent ? "-" : "+"}${Number(tx.amount).toFixed(2)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
